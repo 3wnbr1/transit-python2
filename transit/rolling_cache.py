@@ -36,14 +36,11 @@ def decode_key(s):
     sz = len(s)
     if sz == 2:
         return ord(s[1]) - FIRST_ORD
-    return (ord(s[2]) - FIRST_ORD) + \
-           (CACHE_CODE_DIGITS * (ord(s[1]) - FIRST_ORD))
+    return (ord(s[2]) - FIRST_ORD) + (CACHE_CODE_DIGITS * (ord(s[1]) - FIRST_ORD))
 
 
 def is_cacheable(string, as_map_key=False):
-    return string and len(string) >= MIN_SIZE_CACHEABLE \
-                  and (as_map_key \
-                  or (string[:2] in ["~#", "~$", "~:"]))
+    return string and len(string) >= MIN_SIZE_CACHEABLE and (as_map_key or (string[:2] in ["~#", "~$", "~:"]))
 
 
 class RollingCache(object):
@@ -53,6 +50,7 @@ class RollingCache(object):
     compressing down the overall payload size.  The cache is not intended to
     be used directly.
     """
+
     def __init__(self):
         self.key_to_value = {}
         self.value_to_key = {}

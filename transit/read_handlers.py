@@ -12,14 +12,15 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-from transit import pyversion, transit_types
 import uuid
 import ctypes
-import dateutil.parser
 import datetime
 import dateutil.tz
-from transit.helpers import pairs
+import dateutil.parser
 from decimal import Decimal
+
+from transit import transit_types
+from transit.helpers import pairs
 
 ## Read handlers are used by the decoder when parsing/reading in Transit
 ## data and returning Python objects
@@ -77,7 +78,7 @@ class UuidHandler(object):
     @staticmethod
     def from_rep(u):
         """Given a string, return a UUID object."""
-        if isinstance(u, pyversion.string_types):
+        if isinstance(u, str):
             return uuid.UUID(u)
 
         # hack to remove signs
@@ -96,28 +97,22 @@ class UriHandler(object):
 class DateHandler(object):
     @staticmethod
     def from_rep(d):
-        if isinstance(d, pyversion.int_types):
+        if isinstance(d, int):
             return DateHandler._convert_timestamp(d)
         if "T" in d:
             return dateutil.parser.parse(d)
-        return DateHandler._convert_timestamp(pyversion.long_type(d))
+        return DateHandler._convert_timestamp(int(d))
 
     @staticmethod
     def _convert_timestamp(ms):
         """Given a timestamp in ms, return a DateTime object."""
-        return datetime.datetime.fromtimestamp(ms/1000.0, dateutil.tz.tzutc())
+        return datetime.datetime.fromtimestamp(ms / 1000.0, dateutil.tz.tzutc())
 
 
-if pyversion.PY3:
-    class BigIntegerHandler(object):
-        @staticmethod
-        def from_rep(d):
-            return int(d)
-else:
-    class BigIntegerHandler(object):
-        @staticmethod
-        def from_rep(d):
-            return long(d)
+class BigIntegerHandler(object):
+    @staticmethod
+    def from_rep(d):
+        return int(d)
 
 
 class LinkHandler(object):
@@ -153,10 +148,10 @@ class IdentityHandler(object):
 class SpecialNumbersHandler(object):
     @staticmethod
     def from_rep(z):
-        if z == 'NaN':
-            return float('Nan')
-        if z == 'INF':
-            return float('Inf')
-        if z == '-INF':
-            return float('-Inf')
-        raise ValueError("Don't know how to handle: " + str(z) + " as \"z\"")
+        if z == "NaN":
+            return float("Nan")
+        if z == "INF":
+            return float("Inf")
+        if z == "-INF":
+            return float("-Inf")
+        raise ValueError(f"Don't know how to handle: {z} as 'z'")

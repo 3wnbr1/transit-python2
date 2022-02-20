@@ -11,16 +11,15 @@
 ## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
-from transit import pyversion
-Mapping = pyversion.abc.Mapping
-Hashable = pyversion.abc.Hashable
 
-from transit.pyversion import string_types, unicode_f, unicode_type
+
+from functools import reduce
+from collections.abc import Mapping, Hashable
 
 
 class Named(object):
     def _parse(self):
-        p = self.str.split('/', 1)
+        p = self.str.split("/", 1)
         if len(p) == 1:
             self._name = self.str
             self._namespace = None
@@ -35,13 +34,12 @@ class Named(object):
 
     @property
     def namespace(self):
-        return self._namespace if hasattr(self, "_namespace") \
-                               else self._parse()[1]
+        return self._namespace if hasattr(self, "_namespace") else self._parse()[1]
 
 
 class Keyword(Named):
     def __init__(self, value):
-        assert isinstance(value, string_types)
+        assert isinstance(value, str)
         self.str = value
         self.hv = value.__hash__()
 
@@ -58,7 +56,7 @@ class Keyword(Named):
         return mp[self]
 
     def __repr__(self):
-        return "<Keyword " + self.str + ">"
+        return f"<Keyword {self.str} >"
 
     def __str__(self):
         return self.str
@@ -66,7 +64,7 @@ class Keyword(Named):
 
 class Symbol(Named):
     def __init__(self, value):
-        assert isinstance(value, string_types)
+        assert isinstance(value, str)
         self.str = value
         self.hv = value.__hash__()
 
@@ -88,6 +86,7 @@ class Symbol(Named):
     def __str__(self):
         return self.str
 
+
 kw_cache = {}
 
 
@@ -104,6 +103,7 @@ class _KWS(object):
             kw_cache[str] = Keyword(str)
             return kw_cache[str]
 
+
 kws = _KWS()
 
 
@@ -114,8 +114,7 @@ class TaggedValue(object):
 
     def __eq__(self, other):
         if isinstance(other, TaggedValue):
-            return self.tag == other.tag and \
-                   self.rep == other.rep
+            return self.tag == other.tag and self.rep == other.rep
         return False
 
     def __ne__(self, other):
@@ -181,32 +180,33 @@ class frozendict(Mapping, Hashable):
         return hash(frozenset(self._dict.items()))
 
     def __repr__(self):
-        return 'frozendict(%r)' % (self._dict,)
+        return "frozendict(%r)" % (self._dict,)
 
 
 class Link(object):
     # Class property constants for rendering types
-    LINK = u"link"
-    IMAGE = u"image"
+    LINK = "link"
+    IMAGE = "image"
 
     # Class property constants for keywords/obj properties.
-    HREF = u"href"
-    REL = u"rel"
-    PROMPT = u"prompt"
-    NAME = u"name"
-    RENDER = u"render"
+    HREF = "href"
+    REL = "rel"
+    PROMPT = "prompt"
+    NAME = "name"
+    RENDER = "render"
 
-    def __init__(self, href=None, rel=None, name=None, render=None,
-                 prompt=None):
+    def __init__(self, href=None, rel=None, name=None, render=None, prompt=None):
         self._dict = frozendict()
         assert href and rel
         if render:
             assert render.lower() in [Link.LINK, Link.IMAGE]
-        self._dict = {Link.HREF: href,
-                      Link.REL: rel,
-                      Link.NAME: name,
-                      Link.RENDER: render,
-                      Link.PROMPT: prompt}
+        self._dict = {
+            Link.HREF: href,
+            Link.REL: rel,
+            Link.NAME: name,
+            Link.RENDER: render,
+            Link.PROMPT: prompt,
+        }
 
     def __eq__(self, other):
         return self._dict == other._dict
@@ -252,6 +252,7 @@ class Boolean(object):
     as an int, they're not). You can get a Python bool using bool(x)
     where x is a true or false Boolean.
     """
+
     def __init__(self, name):
         self.v = True if name == "true" else False
         self.name = name
@@ -267,6 +268,7 @@ class Boolean(object):
 
     def __str__(self):
         return self.name
+
 
 # lowercase rep matches java/clojure
 

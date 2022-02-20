@@ -1,35 +1,41 @@
-transit-python
+transit-python2
 ==============
+
+*Forked from [transit-python](https://github.com/cognitect/transit-python). Python 3.6 to 3.10 are supported*
 
 Transit is a format and set of libraries for conveying values between
 applications written in different programming languages. The library provides
 support for marshalling data to/from Python.
 
  * [Rationale](http://blog.cognitect.com/blog/2014/7/22/transit)
- * [API docs](http://cognitect.github.io/transit-python/)
-  * [Mirrored for PyPI](http://pythonhosted.org/transit-python/)
+ * [API docs](http://cognitect.github.io/transit-python2/)
+  * [Mirrored for PyPI](http://pythonhosted.org/transit-python2/)
  * [Specification](http://github.com/cognitect/transit-format)
 
 This implementation's major.minor version number corresponds to the
 version of the Transit specification it supports.
 
-_NOTE: Transit is intended primarily as a wire protocol for transferring data between applications. If storing Transit data durably, readers and writers are expected to use the same version of Transit and you are responsible for migrating/transforming/re-storing that data when and if the transit format changes._
+_NOTE: Transit is a work in progress and may evolve based on feedback.
+As a result, while Transit is a great option for transferring data
+between applications, it should not yet be used for storing data
+durably over time. This recommendation will change when the
+specification is complete._
 
 ## Releases and Dependency Information
 
 The [PYPI](https://pypi.python.org/pypi) package is
-[`transit-python`](https://pypi.python.org/pypi/transit-python)
+[`transit-python2`](https://pypi.python.org/pypi/transit-python2)
 
- * Latest stable release: [0.8](https://pypi.python.org/pypi/transit-python)
+ * Latest stable release: [0.8](https://pypi.python.org/pypi/transit-python2)
 
 You can install with any of the following:
 
- * `easy_install transit-python`
- * `pip install --use-wheel --pre transit-python`
+ * `easy_install transit-python2`
+ * `pip install --use-wheel --pre transit-python2`
 
 You can uninstall with:
 
- * `pip uninstall transit-python`
+ * `pip uninstall transit-python2`
 
 ## Usage
 
@@ -157,14 +163,14 @@ integer will fail.
 ### Setup
 
 Transit Python requires [Transit](http://github.com/cognitect/transit-format) to be at the same directory level as
-transit-python for access to the exemplar files. You will also need
-to add transit-python to your PYTHONPATH.
+transit-python2 for access to the exemplar files. You will also need
+to add transit-python2 to your PYTHONPATH.
 
 ```sh
 export PYTHONPATH=$(pwd)
 ```
 
-Tests should be run from the transit-python directory.
+Tests should be run from the transit-python2 directory.
 
 ### Benchmarks
 
@@ -194,7 +200,7 @@ bin/revision
 
 ## Contributing
 
-This library is open source, developed internally by Cognitect. We welcome discussions of potential problems and enhancement suggestions on the [transit-format mailing list](https://groups.google.com/forum/#!forum/transit-format). Issues can be filed using GitHub [issues](https://github.com/cognitect/transit-python/issues) for this project. Because transit is incorporated into products and client projects, we prefer to do development internally and are not accepting pull requests or patches.
+This library is open source, developed internally by Cognitect. We welcome discussions of potential problems and enhancement suggestions on the [transit-format mailing list](https://groups.google.com/forum/#!forum/transit-format). Issues can be filed using GitHub [issues](https://github.com/cognitect/transit-python2/issues) for this project. Because transit is incorporated into products and client projects, we prefer to do development internally and are not accepting pull requests or patches.
 
 ## Copyright and License
 

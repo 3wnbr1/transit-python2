@@ -12,42 +12,39 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-from transit.reader import JsonUnmarshaler
-from transit.pyversion import unicode_type
 import json
 import time
 from io import StringIO
 
+from transit.reader import JsonUnmarshaler
+
+
 def run_tests(data):
-    datas = StringIO(unicode_type(data))
+    datas = StringIO(str(data))
     t = time.time()
     JsonUnmarshaler().load(datas)
     et = time.time()
-    datas = StringIO(unicode_type(data))
+    datas = StringIO(str(data))
     tt = time.time()
     json.load(datas)
     ett = time.time()
     read_delta = (et - t) * 1000.0
-    print("Done: " + str(read_delta) + "  --  raw JSON in: " + str((ett - tt) * 1000.0))
+    print(f"Done: {read_delta}  --  raw JSON in: {(ett - tt) * 1000.0}")
     return read_delta
 
 
-seattle_dir = "../transit-format/examples/0.8/"
+seattle_dir = "transit-format/examples/0.8/"
 means = {}
-for jsonfile in [seattle_dir + "example.json", 
-                 seattle_dir + "example.verbose.json"]:
+for jsonfile in [seattle_dir + "example.json", seattle_dir + "example.verbose.json"]:
     data = ""
-    with open(jsonfile, 'r') as fd:
+    with open(jsonfile, "r") as fd:
         data = fd.read()
 
-    print("-"*50)
-    print("Running " + jsonfile)
-    print("-"*50)
+    print(f"{'-' * 50} Running {jsonfile} {'-' * 50}")
 
     runs = 200
     deltas = [run_tests(data) for x in range(runs)]
-    means[jsonfile] = sum(deltas)/runs
+    means[jsonfile] = sum(deltas) / runs
 
 for jsonfile, mean in means.items():
-    print("\nMean for" + jsonfile + ": "+str(mean))
-
+    print(f"Mean for {jsonfile}: {mean}")

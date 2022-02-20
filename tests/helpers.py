@@ -12,10 +12,10 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-import transit
-from transit.transit_types import Symbol, Keyword, frozendict
-from transit.helpers import cycle, take, pairs
-from transit.pyversion import izip
+
+from transit.helpers import cycle, take
+from transit.transit_types import Keyword, frozendict
+
 
 def ints_centered_on(m, n=5):
     return tuple(range(m - n, m + n + 1))
@@ -25,9 +25,9 @@ def array_of_symbools(m, n=None):
     if n is None:
         n = m
 
-    seeds = map(lambda x: Keyword("key"+str(x).zfill(4)), range(0, m))
+    seeds = map(lambda x: Keyword("key" + str(x).zfill(4)), range(0, m))
     return take(n, cycle(seeds))
 
 
 def hash_of_size(n):
-    return frozendict(izip(array_of_symbools(n), range(0, n+1)))
+    return frozendict(zip(array_of_symbools(n), range(0, n + 1)))

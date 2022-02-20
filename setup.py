@@ -14,14 +14,21 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-from setuptools import setup, find_packages
-import subprocess
 
-setup(name="transit-python",
-      version="0.8.284",
-      description="Transit marshalling for Python",
-      author="Cognitect",
-      url="https://github.com/cognitect/transit-python",
-      packages=find_packages(),
-      install_requires=["python-dateutil", "msgpack-python"])
+from pathlib import Path
+from setuptools import setup
 
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
+setup(
+    name="transit-python2",
+    version="0.8.321",
+    description="Transit marshalling for Python",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    author="Cognitect, 3wnbr1",
+    url="https://github.com/3wnbr1/transit-python2",
+    packages=["transit"],
+    install_requires=["python-dateutil", "msgpack-python"],
+)

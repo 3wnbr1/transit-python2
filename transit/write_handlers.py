@@ -15,15 +15,22 @@
 import uuid
 import datetime
 import struct
-from transit import pyversion
 from transit.class_hash import ClassDict
-from transit.transit_types import Keyword, Symbol, URI, frozendict, TaggedValue, Link, Boolean
+from transit.transit_types import (
+    Keyword,
+    Symbol,
+    URI,
+    frozendict,
+    TaggedValue,
+    Link,
+    Boolean,
+)
 from decimal import Decimal
 from dateutil import tz
 from math import isnan
 
-MAX_INT = 2**63 - 1
-MIN_INT = -2**63
+MAX_INT = pow(2, 63) - 1
+MIN_INT = -pow(2, 63)
 
 ## This file contains Write Handlers - all the top-level objects used when
 ## writing Transit data.  These object must all be immutable and pickleable.
@@ -48,7 +55,7 @@ class TaggedMap(object):
 class NoneHandler(object):
     @staticmethod
     def tag(_):
-        return '_'
+        return "_"
 
     @staticmethod
     def rep(_):
@@ -62,7 +69,7 @@ class NoneHandler(object):
 class IntHandler(object):
     @staticmethod
     def tag(i):
-        return 'i'
+        return "i"
 
     @staticmethod
     def rep(i):
@@ -86,11 +93,12 @@ class BigIntHandler(object):
     def string_rep(n):
         return str(n)
 
+
 class Python3IntHandler(object):
     @staticmethod
     def tag(n):
         if n < MAX_INT and n > MIN_INT:
-          return "i"
+            return "i"
         return "n"
 
     @staticmethod
@@ -119,13 +127,13 @@ class BigDecimalHandler(object):
 class FloatHandler(object):
     @staticmethod
     def tag(f):
-        return "z" if isnan(f) or f in (float('Inf'), float('-Inf')) else "d"
+        return "z" if isnan(f) or f in (float("Inf"), float("-Inf")) else "d"
 
     @staticmethod
     def rep(f):
         if isnan(f):
             return "NaN"
-        if f == float('Inf'):
+        if f == float("Inf"):
             return "INF"
         if f == float("-Inf"):
             return "-INF"
@@ -139,7 +147,7 @@ class FloatHandler(object):
 class StringHandler(object):
     @staticmethod
     def tag(s):
-        return 's'
+        return "s"
 
     @staticmethod
     def rep(s):
@@ -153,7 +161,7 @@ class StringHandler(object):
 class BooleanHandler(object):
     @staticmethod
     def tag(_):
-        return '?'
+        return "?"
 
     @staticmethod
     def rep(b):
@@ -161,13 +169,13 @@ class BooleanHandler(object):
 
     @staticmethod
     def string_rep(b):
-        return 't' if b else 'f'
+        return "t" if b else "f"
 
 
 class ArrayHandler(object):
     @staticmethod
     def tag(a):
-        return 'array'
+        return "array"
 
     @staticmethod
     def rep(a):
@@ -181,7 +189,7 @@ class ArrayHandler(object):
 class MapHandler(object):
     @staticmethod
     def tag(m):
-        return 'map'
+        return "map"
 
     @staticmethod
     def rep(m):
@@ -195,7 +203,7 @@ class MapHandler(object):
 class KeywordHandler(object):
     @staticmethod
     def tag(k):
-        return ':'
+        return ":"
 
     @staticmethod
     def rep(k):
@@ -209,7 +217,7 @@ class KeywordHandler(object):
 class SymbolHandler(object):
     @staticmethod
     def tag(s):
-        return '$'
+        return "$"
 
     @staticmethod
     def rep(s):
@@ -227,7 +235,7 @@ class UuidHandler(object):
 
     @staticmethod
     def rep(u):
-        return struct.unpack('>qq', u.bytes)
+        return struct.unpack(">qq", u.bytes)
 
     @staticmethod
     def string_rep(u):
@@ -258,7 +266,7 @@ class DateTimeHandler(object):
     @staticmethod
     def rep(d):
         td = d - DateTimeHandler.epoch
-        return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 1e3)
+        return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * pow(10, 6)) / 1e3)
 
     @staticmethod
     def verbose_handler():
@@ -340,17 +348,10 @@ class WriteHandler(ClassDict):
         self[bool] = BooleanHandler
         self[Boolean] = BooleanHandler
         self[str] = StringHandler
-        self[pyversion.unicode_type] = StringHandler
         self[list] = ArrayHandler
         self[tuple] = ArrayHandler
         self[dict] = MapHandler
-
-        if pyversion.PY3:
-            self[int] = Python3IntHandler
-        else:
-            self[int] = IntHandler
-            self[long] = BigIntHandler
-
+        self[int] = Python3IntHandler
         self[float] = FloatHandler
         self[Keyword] = KeywordHandler
         self[Symbol] = SymbolHandler

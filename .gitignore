@@ -3,5 +3,7 @@
 apidoc/_build
 dist/
 build/*
+.tox/*
 !build/release
 *.egg*
+*.DS_Store

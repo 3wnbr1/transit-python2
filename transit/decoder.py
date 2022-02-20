@@ -13,42 +13,50 @@
 ## limitations under the License.
 
 from collections import OrderedDict
-from transit import pyversion, transit_types
+
+from transit import transit_types
 from transit import read_handlers as rh
-from transit.constants import MAP_AS_ARR, ESC, SUB, RES
 from transit.helpers import pairs
-from transit.rolling_cache import RollingCache, is_cacheable, is_cache_key
 from transit.transit_types import true, false
+from transit.constants import MAP_AS_ARR, ESC, SUB, RES
+from transit.rolling_cache import RollingCache, is_cacheable, is_cache_key
 
 
 class Tag(object):
     def __init__(self, tag):
         self.tag = tag
 
-default_options = {"decoders": {"_": rh.NoneHandler,
-                                ":": rh.KeywordHandler,
-                                "$": rh.SymbolHandler,
-                                "?": rh.BooleanHandler,
-                                "i": rh.IntHandler,
-                                "d": rh.FloatHandler,
-                                "f": rh.BigDecimalHandler,
-                                "u": rh.UuidHandler,
-                                "r": rh.UriHandler,
-                                "t": rh.DateHandler,
-                                "m": rh.DateHandler,
-                                "n": rh.BigIntegerHandler,
-                                "z": rh.SpecialNumbersHandler,
-                                "link": rh.LinkHandler,
-                                "list": rh.ListHandler,
-                                "set": rh.SetHandler,
-                                "cmap": rh.CmapHandler,
-                                "'": rh.IdentityHandler},
-                   "default_decoder": rh.DefaultHandler}
 
-ground_decoders = {"_": rh.NoneHandler,
-                   "?": rh.BooleanHandler,
-                   "i": rh.IntHandler,
-                   "'": rh.IdentityHandler}
+default_options = {
+    "decoders": {
+        "_": rh.NoneHandler,
+        ":": rh.KeywordHandler,
+        "$": rh.SymbolHandler,
+        "?": rh.BooleanHandler,
+        "i": rh.IntHandler,
+        "d": rh.FloatHandler,
+        "f": rh.BigDecimalHandler,
+        "u": rh.UuidHandler,
+        "r": rh.UriHandler,
+        "t": rh.DateHandler,
+        "m": rh.DateHandler,
+        "n": rh.BigIntegerHandler,
+        "z": rh.SpecialNumbersHandler,
+        "link": rh.LinkHandler,
+        "list": rh.ListHandler,
+        "set": rh.SetHandler,
+        "cmap": rh.CmapHandler,
+        "'": rh.IdentityHandler,
+    },
+    "default_decoder": rh.DefaultHandler,
+}
+
+ground_decoders = {
+    "_": rh.NoneHandler,
+    "?": rh.BooleanHandler,
+    "i": rh.IntHandler,
+    "'": rh.IdentityHandler,
+}
 
 
 class Decoder(object):
@@ -62,6 +70,7 @@ class Decoder(object):
     known as Ground Decoders, and are needed to maintain bottom-tier
     compatibility.
     """
+
     def __init__(self, options={}):
         self.options = default_options.copy()
         self.options.update(options)
@@ -83,7 +92,7 @@ class Decoder(object):
 
     def _decode(self, node, cache, as_map_key):
         tp = type(node)
-        if tp is pyversion.unicode_type:
+        if tp is str:
             return self.decode_string(node, cache, as_map_key)
         elif tp is bytes:
             return self.decode_string(node.decode("utf-8"), cache, as_map_key)
@@ -91,8 +100,6 @@ class Decoder(object):
             return self.decode_hash(node, cache, as_map_key)
         elif tp is list:
             return self.decode_list(node, cache, as_map_key)
-        elif tp is str:
-            return self.decode_string(unicode(node, "utf-8"), cache, as_map_key)
         elif tp is bool:
             return true if node else false
         return node
@@ -116,8 +123,7 @@ class Decoder(object):
 
             decoded = self._decode(node[0], cache, as_map_key)
             if isinstance(decoded, Tag):
-                return self.decode_tag(decoded.tag,
-                                       self._decode(node[1], cache, as_map_key))
+                return self.decode_tag(decoded.tag, self._decode(node[1], cache, as_map_key))
         return tuple(self._decode(x, cache, as_map_key) for x in node)
 
     def decode_string(self, string, cache, as_map_key):
@@ -125,8 +131,7 @@ class Decoder(object):
         top-level 'decode' function.
         """
         if is_cache_key(string):
-            return self.parse_string(cache.decode(string, as_map_key),
-                                     cache, as_map_key)
+            return self.parse_string(cache.decode(string, as_map_key), cache, as_map_key)
         if is_cacheable(string, as_map_key):
             cache.encode(string, as_map_key)
         return self.parse_string(string, cache, as_map_key)
@@ -156,8 +161,7 @@ class Decoder(object):
             value = hash[key]
             key = self._decode(key, cache, True)
             if isinstance(key, Tag):
-                return self.decode_tag(key.tag,
-                                       self._decode(value, cache, as_map_key))
+                return self.decode_tag(key.tag, self._decode(value, cache, as_map_key))
         return transit_types.frozendict({key: self._decode(value, cache, False)})
 
     def parse_string(self, string, cache, as_map_key):
@@ -170,8 +174,7 @@ class Decoder(object):
             elif m == "#":
                 return Tag(string[2:])
             else:
-                return self.options["default_decoder"].from_rep(string[1],
-                                                                string[2:])
+                return self.options["default_decoder"].from_rep(string[1], string[2:])
         return string
 
     def register(self, key_or_tag, obj):

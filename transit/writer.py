@@ -12,27 +12,25 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-import sys
-import msgpack
+
 import re
-from transit import pyversion
+import msgpack
 from transit.constants import SUB, ESC, RES, MAP_AS_ARR, QUOTE
 from transit.rolling_cache import RollingCache
 from transit.write_handlers import WriteHandler
 from transit.transit_types import TaggedValue
 
 ESCAPE_DCT = {
-    '\\': u'\\\\',
-    '"': u'\\"',
-    '\b': u'\\b',
-    '\f': u'\\f',
-    '\n': u'\\n',
-    '\r': u'\\r',
-    '\t': u'\\t',
+    "\\": "\\\\",
+    '"': '\\"',
+    "\b": "\\b",
+    "\f": "\\f",
+    "\n": "\\n",
+    "\r": "\\r",
+    "\t": "\\t",
 }
 for i in range(0x20):
-    ESCAPE_DCT.setdefault(chr(i), '\\u{0:04x}'.format(i))
-
+    ESCAPE_DCT.setdefault(chr(i), "\\u{0:04x}".format(i))
 
 
 class Writer(object):
@@ -43,6 +41,7 @@ class Writer(object):
     an options dictionary that will be forwarded onto the Marshaler.
     The cache is enabled by default.
     """
+
     def __init__(self, io, protocol="json", opts={"cache_enabled": True}):
         if protocol == "json":
             self.marshaler = JsonMarshaler(io, opts=opts)
@@ -51,13 +50,12 @@ class Writer(object):
         elif protocol == "msgpack":
             self.marshaler = MsgPackMarshaler(io, opts=opts)
         else:
-            raise ValueError("'" + protocol + "' is not a supported protocol. " +
-                             "Protocol must be 'json', 'json_verbose', or 'msgpack'.")
+            raise ValueError(
+                f"'{protocol}' is not a supported protocol. Protocol must be 'json', 'json_verbose', or 'msgpack'."
+            )
 
     def write(self, obj):
-        """Given a Python object, marshal it into Transit data and write it to
-        the 'io' source.
-        """
+        """Given a Python object, marshal it into Transit data and write it to the 'io' source."""
         self.marshaler.marshal_top(obj)
 
     def register(self, obj_type, handler_class):
@@ -70,18 +68,19 @@ class Writer(object):
 
 
 def flatten_map(m):
-    """Expand a dictionary's items into a flat list
-    """
+    """Expand a dictionary's items into a flat list"""
     # This is the fastest way to do this in Python
     return [item for t in m.items() for item in t]
 
 
 def re_fn(pat):
     compiled = re.compile(pat)
+
     def re_inner_fn(value):
         return compiled.match(value)
 
     return re_inner_fn
+
 
 is_escapable = re_fn("^" + re.escape(SUB) + "|" + ESC + "|" + RES)
 
@@ -90,7 +89,7 @@ def escape(s):
     if s is MAP_AS_ARR:
         return MAP_AS_ARR
     if is_escapable(s):
-        return ESC+s
+        return ESC + s
     else:
         return s
 
@@ -102,6 +101,7 @@ class Marshaler(object):
     objects.  The end of this process is specialized by other Marshalers to
     covert the final result into an on-the-wire payload (JSON or MsgPack).
     """
+
     def __init__(self, opts={}):
         self.opts = opts
         self._init_handlers()
@@ -122,9 +122,9 @@ class Marshaler(object):
         return self.emit_string(ESC, "_", "", True, cache) if as_map_key else self.emit_object(None)
 
     def emit_string(self, prefix, tag, string, as_map_key, cache):
-        encoded = cache.encode(str(prefix)+tag+string, as_map_key)
+        encoded = cache.encode(str(prefix) + tag + string, as_map_key)
         # TODO: Remove this optimization for the time being - it breaks cache
-        #if "cache_enabled" in self.opts and is_cacheable(encoded, as_map_key):
+        # if "cache_enabled" in self.opts and is_cacheable(encoded, as_map_key):
         #    return self.emit_object(cache.value_to_key[encoded], as_map_key)
         return self.emit_object(encoded, as_map_key)
 
@@ -146,7 +146,7 @@ class Marshaler(object):
             self.marshal(x, False, cache)
         self.emit_array_end()
 
-    def emit_map(self, m, _, cache):# use map as object from above, have to overwrite default parser.
+    def emit_map(self, m, _, cache):  # use map as object from above, have to overwrite default parser.
         self.emit_map_start(len(m))
         for k, v in m.items():
             self.marshal(k, True, cache)
@@ -168,22 +168,18 @@ class Marshaler(object):
     def emit_encoded(self, tag, handler, obj, as_map_key, cache):
         rep = handler.rep(obj)
         if len(tag) == 1:
-            if isinstance(rep, pyversion.string_types):
+            if isinstance(rep, str):
                 self.emit_string(ESC, tag, rep, as_map_key, cache)
             elif as_map_key or self.opts["prefer_strings"]:
                 rep = handler.string_rep(obj)
-                if isinstance(rep, pyversion.string_types):
+                if isinstance(rep, str):
                     self.emit_string(ESC, tag, rep, as_map_key, cache)
                 else:
-                    raise AssertionError("Cannot be encoded as string: " + str({"tag": tag,
-                                                                                "rep": rep,
-                                                                                "obj": obj}))
+                    raise AssertionError(f"Cannot be encoded as string: {str({'tag': tag, 'rep': rep, 'obj': obj})}")
             else:
                 self.emit_tagged(tag, rep, cache)
         elif as_map_key:
-            raise AssertionError("Cannot be used as a map key: " + str({"tag": tag,
-                                                                        "rep": rep,
-                                                                        "obj": obj}))
+            raise AssertionError(f"Cannot be used as a map key: {str({'tag': tag, 'rep': rep, 'obj': obj})}")
         else:
             self.emit_tagged(tag, rep, cache)
 
@@ -199,7 +195,13 @@ class Marshaler(object):
         f = marshal_dispatch.get(tag)
 
         if f:
-            f(self, obj, handler.string_rep(obj) if as_map_key else handler.rep(obj), as_map_key, cache)
+            f(
+                self,
+                obj,
+                handler.string_rep(obj) if as_map_key else handler.rep(obj),
+                as_map_key,
+                cache,
+            )
         else:
             self.emit_encoded(tag, handler, obj, as_map_key, cache)
 
@@ -221,7 +223,7 @@ class Marshaler(object):
                 self.marshal(obj, False, cache)
             self.flush()
         else:
-            raise AssertionError("Handler must provide a non-nil tag: " + str(handler))
+            raise AssertionError(f"Handler must provide a non-nil tag: {handler}")
 
     def dispatch_map(self, rep, as_map_key, cache):
         """Used to determine and dipatch the writing of a map - a simple
@@ -240,27 +242,33 @@ class Marshaler(object):
         """
         self.handlers[obj_type] = handler_class
 
-marshal_dispatch = {"_": lambda self, obj, rep, as_map_key, cache: self.emit_nil(rep, as_map_key, cache),
-                    "?": lambda self, obj, rep, as_map_key, cache: self.emit_boolean(rep, as_map_key, cache),
-                    "s": lambda self, obj, rep, as_map_key, cache: self.emit_string("", "", escape(rep), as_map_key, cache),
-                    "i": lambda self, i, rep, as_map_key, cache: self.emit_int("i", i, rep, as_map_key, cache),
-                    "n": lambda self, i, rep, as_map_key, cache: self.emit_int("n", i, rep, as_map_key, cache),
-                    "d": lambda self, obj, rep, as_map_key, cache: self.emit_double(rep, as_map_key, cache),
-                    "'": lambda self, obj, rep, _, cache: self.emit_tagged("'", rep, cache),
-                    "array": lambda self, obj, rep, as_map_key, cache: self.emit_array(rep, as_map_key, cache),
-                    "map": lambda self, obj, rep, as_map_key, cache: self.dispatch_map(rep, as_map_key, cache)}
+
+marshal_dispatch = {
+    "_": lambda self, obj, rep, as_map_key, cache: self.emit_nil(rep, as_map_key, cache),
+    "?": lambda self, obj, rep, as_map_key, cache: self.emit_boolean(rep, as_map_key, cache),
+    "s": lambda self, obj, rep, as_map_key, cache: self.emit_string("", "", escape(rep), as_map_key, cache),
+    "i": lambda self, i, rep, as_map_key, cache: self.emit_int("i", i, rep, as_map_key, cache),
+    "n": lambda self, i, rep, as_map_key, cache: self.emit_int("n", i, rep, as_map_key, cache),
+    "d": lambda self, obj, rep, as_map_key, cache: self.emit_double(rep, as_map_key, cache),
+    "'": lambda self, obj, rep, _, cache: self.emit_tagged("'", rep, cache),
+    "array": lambda self, obj, rep, as_map_key, cache: self.emit_array(rep, as_map_key, cache),
+    "map": lambda self, obj, rep, as_map_key, cache: self.dispatch_map(rep, as_map_key, cache),
+}
 
 
 class MsgPackMarshaler(Marshaler):
     """The Marshaler tailor to MsgPack.  To use this Marshaler, specify the
     'msgpack' protocol when creating a Writer.
     """
+
     MSGPACK_MAX_INT = pow(2, 63) - 1
     MSGPACK_MIN_INT = -pow(2, 63)
 
-    default_opts = {"prefer_strings": False,
-                    "max_int": MSGPACK_MAX_INT,
-                    "min_int": MSGPACK_MIN_INT}
+    default_opts = {
+        "prefer_strings": False,
+        "max_int": MSGPACK_MAX_INT,
+        "min_int": MSGPACK_MIN_INT,
+    }
 
     def __init__(self, io, opts={}):
         self.io = io
@@ -289,19 +297,23 @@ class MsgPackMarshaler(Marshaler):
         self.io.flush()
         self.packer.reset()
 
-REPLACE_RE = re.compile("\"")
+
+REPLACE_RE = re.compile('"')
 
 
 class JsonMarshaler(Marshaler):
     """The Marshaler tailor to JSON.  To use this Marshaler, specify the
     'json' protocol when creating a Writer.
     """
+
     JSON_MAX_INT = pow(2, 53) - 1
     JSON_MIN_INT = -pow(2, 53) + 1
 
-    default_opts = {"prefer_strings": True,
-                    "max_int": JSON_MAX_INT,
-                    "min_int": JSON_MIN_INT}
+    default_opts = {
+        "prefer_strings": True,
+        "max_int": JSON_MAX_INT,
+        "min_int": JSON_MIN_INT,
+    }
 
     def __init__(self, io, opts={}):
         self.io = io
@@ -330,22 +342,22 @@ class JsonMarshaler(Marshaler):
         else:
             last = self.is_key[-1]
             if last:
-                self.io.write(u":")
+                self.io.write(":")
                 self.is_key[-1] = False
             elif last is False:
-                self.io.write(u",")
+                self.io.write(",")
                 self.is_key[-1] = True
             else:
-                self.io.write(u",")
+                self.io.write(",")
 
     def emit_array_start(self, size):
         self.write_sep()
-        self.io.write(u"[")
+        self.io.write("[")
         self.push_level()
 
     def emit_array_end(self):
         self.pop_level()
-        self.io.write(u"]")
+        self.io.write("]")
 
     def emit_map(self, m, _, cache):
         """Emits array as per default JSON spec."""
@@ -358,37 +370,39 @@ class JsonMarshaler(Marshaler):
 
     def emit_map_start(self, size):
         self.write_sep()
-        self.io.write(u"{")
+        self.io.write("{")
         self.push_map()
 
     def emit_map_end(self):
         self.pop_level()
-        self.io.write(u"}")
+        self.io.write("}")
 
     def emit_object(self, obj, as_map_key=False):
         tp = type(obj)
         self.write_sep()
-        if tp in pyversion.string_types:
-            self.io.write(u"\"")
-            self.io.write(u"".join([(ESCAPE_DCT[c]) if c in ESCAPE_DCT else c for c in obj]))
-            self.io.write(u"\"")
-        elif pyversion.isnumber_type(tp):
-            self.io.write(pyversion.unicode_type(obj))
+        if tp is str:
+            self.io.write('"')
+            self.io.write("".join([(ESCAPE_DCT[c]) if c in ESCAPE_DCT else c for c in obj]))
+            self.io.write('"')
+        elif tp in (int, float):
+            self.io.write(str(obj))
         elif tp is bool:
-            self.io.write(u"true" if obj else u"false")
+            self.io.write("true" if obj else "false")
         elif obj is None:
-            self.io.write(u"null")
+            self.io.write("null")
         else:
-          raise AssertionError("Don't know how to encode: " + str(obj) + " of type: " + str(type(obj)))
+            raise AssertionError(f"Don't know how to encode: {obj} of type: {type(obj)}")
 
 
 class VerboseSettings(object):
-    """Mixin for JsonMarshaler that adds support for Verbose output/input.
+    """
+    Mixin for JsonMarshaler that adds support for Verbose output/input.
     Verbosity is only suggest for debuging/inspecting purposes.
     """
+
     @staticmethod
     def _verbose_handlers(handlers):
-        for k, v in pyversion.iteritems(handlers):
+        for k, v in handlers.items():
             if hasattr(v, "verbose_handler"):
                 handlers[k] = v.verbose_handler()
         return handlers
@@ -397,7 +411,7 @@ class VerboseSettings(object):
         self.handlers = self._verbose_handlers(WriteHandler())
 
     def emit_string(self, prefix, tag, string, as_map_key, cache):
-        return self.emit_object(pyversion.unicode_type(prefix) + tag + string, as_map_key)
+        return self.emit_object(str(prefix) + tag + string, as_map_key)
 
     def emit_map(self, m, _, cache):
         self.emit_map_start(len(m))
@@ -415,4 +429,5 @@ class VerboseSettings(object):
 
 class VerboseJsonMarshaler(VerboseSettings, JsonMarshaler):
     """JsonMarshaler class with VerboseSettings mixin."""
+
     pass  # all from inheritance and mixin

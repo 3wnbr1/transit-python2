@@ -11,8 +11,9 @@
 ## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
-from transit import pyversion
-MutableMapping = pyversion.abc.MutableMapping
+
+
+from collections.abc import MutableMapping
 
 
 class ClassDict(MutableMapping):
@@ -37,7 +38,7 @@ class ClassDict(MutableMapping):
                 value = t in self.store and self.store[t]
                 if value:
                     return value
-            raise KeyError("No handler found for: " + str(key))
+            raise KeyError(f"No handler found for: {key}")
 
     def __setitem__(self, key, value):
         self.store[key] = value
