@@ -1,7 +1,7 @@
 transit-python2
 ==============
 
-*Forked from [transit-python](https://github.com/cognitect/transit-python). Python 3.6 to 3.10 are supported*
+*Forked from [transit-python](https://github.com/cognitect/transit-python). Python 3.6 to 3.11 are supported*
 
 Transit is a format and set of libraries for conveying values between
 applications written in different programming languages. The library provides
